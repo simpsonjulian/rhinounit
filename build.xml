@@ -1,0 +1,39 @@
+
+<project name="" basedir="." default="run-all-tests">
+
+	<target name="run-all-tests" depends="run-unit-tests, run-js-lint"/>
+
+	<scriptdef name="rhinounit"
+			  src="src/unitTiestAnt.js"
+			  language="javascript">
+		<attribute name="options"/>
+		<element name="fileset" type="fileset"/>
+	</scriptdef>
+	
+	<target name="run-unit-tests">
+		<rhinounit options="{verbose:true, stackTrace:true}">
+			<fileset dir="test">
+				<include name="**/*.js"/>
+			</fileset>
+		</rhinounit>
+	</target>
+	
+	<scriptdef name="jslintant"
+			src="jslint/jslintant.js"
+			language="javascript">
+		<attribute name="options" />
+		<element name="fileset" type="fileset" />
+	</scriptdef>
+
+	<target name="run-js-lint">
+		<jslintant options="{eqeqeq : false, white: true, plusplus : false, bitwise : true, passfail: false, browser: true, evil: true, forin: false}">
+		    <fileset dir="src">
+		        <include name="**/*.js"/>
+		    </fileset>
+		</jslintant>
+		<jslintant options="{eqeqeq : true, white: true, plusplus : false, bitwise : true, passfail: false, browser: true, evil: true, forin: false}">
+			<fileset dir="test"/>
+		</jslintant>
+	</target>
+	
+</project>
