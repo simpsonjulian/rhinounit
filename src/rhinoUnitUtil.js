@@ -85,7 +85,7 @@ function AssertionException(message, stackTrace) {
 
 AssertionException.print = function (object) {
 	if (typeof object === "object") {
-		return constructorNameFor(object) + ":" + object;
+		return getConstructorNameFor(object) + ":" + object;
 	}
 	return typeof object + ":" + object;
 };
@@ -130,7 +130,11 @@ AssertionException.intersection = function (expected, actual) {
 };
 
 AssertionException.cloneArray = function (array) {
-	return [].concat(array);
+	var result = [];
+	forEachElementOf(array, function (item) {
+		result.push(item);
+	});
+	return result;
 };
 
 
@@ -212,11 +216,11 @@ function and() {
 function hasConstructor(expected) {
 	return function (actual, not) {
 		if (not) {
-			if (constructorNameFor(actual) === expected) {
+			if (getConstructorNameFor(actual) === expected) {
 				return "expected:<" + AssertionException.print(actual) + "> should not have a constructor of:<" + expected + ">, but it did";
 			}
 		} else {
-			if (constructorNameFor(actual) !== expected) {
+			if (getConstructorNameFor(actual) !== expected) {
 				return "expected:<" + AssertionException.print(actual) + "> to have a constructor of:<" + expected + "> but it was " + (typeof actual);
 			}
 		}
@@ -252,15 +256,42 @@ function isOfType(expected) {
 }
 
 function isCollectionContaining() {
-	var expected = cloneArray(arguments);
+	var expected = AssertionException.cloneArray(arguments);
 	return function (list, not) {
 		if (not) {
-			if (intersection(expected, list).length === expected.length) {
-				return "should not have found:<" + expected + "> in:<" + list + ">";
+			if (AssertionException.intersection(expected, list).length === expected.length) {
+				return "should not have found:<" + AssertionException.print(expected) + "> in:<" + list + ">";
 			}
 		} else {
-			if (intersection(expected, list).length !== expected.length) {
-				return "couldn't find:<" + expected + "> in:<" + list + ">";
+			if (AssertionException.intersection(expected, list).length !== expected.length) {
+				return "couldn't find:<" + AssertionException.print(expected) + "> in:<" + list + ">";
+			}
+		}
+	};
+}
+
+function containsInOrder() {
+
+	function doesContainInOrder(expected, actual) {
+		var matches = true;
+		forEachElementOf(expected, function (item, index) {
+			if (item !== actual[index]) {
+				matches = false;
+			}
+		});
+		return matches;
+	}
+
+	var expected = AssertionException.cloneArray(arguments);
+	return function (actual, not) {
+		var containsInOrder = doesContainInOrder(expected, actual);
+		if (not) {
+			if (containsInOrder) {
+				return "Should not have been the same as:<" + AssertionException.print(actual) + ">";
+			}
+		} else {
+			if (!containsInOrder) {
+				return "Should have been the same as:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">";
 			}
 		}
 	};
@@ -280,10 +311,24 @@ function isNull(message) {
 	};
 }
 
-/*
-containsInOrder
-floatEq
-*/
+
+function eqFloat(expected, accuracy) {
+	return function (actual, not) {
+		if (!accuracy) {
+			accuracy = 0.01;
+		}
+		if (not) {
+			if (actual < expected * (1 + accuracy) && actual > expected * (1 - accuracy)) {
+				return "get:<" + actual + "> but should not have been:<" + expected + "> +/-" + (accuracy * 100) + "%";
+			}
+		} else {
+			if (actual > expected * (1 + accuracy) || actual < expected * (1 - accuracy)) {
+				return "expected:<" + expected + "> +/-" + (accuracy * 100) + "%, but was:<" + actual + ">";
+			}
+		}
+	};
+}
+
 
 function Assert() {
 
