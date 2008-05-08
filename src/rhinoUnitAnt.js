@@ -83,7 +83,7 @@ function runTest(file) {
 }
 				
 eval("options = " + attributes.get("options") + ";");
-eval(loadFile("src/unitTiestUtil.js"));
+eval(loadFile("src/rhinoUnitUtil.js"));
 
 var filesets = elements.get("fileset");
 for (var j = 0; j < filesets.size(); j++) {
