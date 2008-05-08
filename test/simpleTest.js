@@ -21,7 +21,7 @@ testCases(test,
 			},
 			defaultProperty : 1,
 			defaultString : "john and mary"
-		}
+		};
 	},
 	
 	function defaultPropertyIs1() {
@@ -82,25 +82,25 @@ testCases(test,
 	function defaultFunctionIsCalled() {
 		anObject.defaultFunction = function (aString) {
 			assert.that(aString, eq("a string"));
-		}
+		};
 		assert.mustCall(anObject, "defaultFunction");
 		anObject.defaultFunction("a string");
 	},
 	
 	function checkCollectionContaining() {
-		assert.that([1,2,3], isCollectionContaining(2,3));
+		assert.that([1, 2, 3], isCollectionContaining(2, 3));
 	},
 	
 	function checkCollectionNotContaining() {
-		assert.that([1,3], not(isCollectionContaining(2,4)));
+		assert.that([1, 3], not(isCollectionContaining(2, 4)));
 	},
 	
 	function checkCollectionContainingInOrder() {
-		assert.that([1,3,2], containsInOrder(1,3,2));
+		assert.that([1, 3, 2], containsInOrder(1, 3, 2));
 	},
 	
 	function checkCollectionDoesntContainInOrder() {
-		assert.that([1,3,2], not(containsInOrder(1,2,3)));
+		assert.that([1, 3, 2], not(containsInOrder(1, 2, 3)));
 	},
 	
 	function checkFloatComparison() {

@@ -179,6 +179,7 @@ JSLINT = function () {
             forin      : true, // if for in statements must filter
             fragment   : true, // if HTML fragments should be allowed
             laxbreak   : true, // if line breaks should not be checked
+			newprimitive  : true, // if String/Boolean/Integers can be 'newed'
             nomen      : true, // if names should be checked
             on         : true, // if HTML event handlers should be allowed
             passfail   : true, // if the scan should stop on first error
@@ -2812,8 +2813,10 @@ klass:                              for (;;) {
                 case 'Number':
                 case 'String':
                 case 'Boolean':
-                    warning("Do not use the {a} function as a constructor.",
+					if (!option.newprimitive) {
+						warning("Do not use the {a} function as a constructor.",
                             token, c.value);
+					}
                     break;
                 case 'Function':
                     if (!option.evil) {
