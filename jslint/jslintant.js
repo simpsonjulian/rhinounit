@@ -1,5 +1,5 @@
 // jslintant.js
-// The following is copied almost completely from John Snyder's blog at
+// The following is copied almost completely from John Snyders' blog at
 //
 // http://dev2dev.bea.com/blog/jsnyders/archive/2007/11/using_jslint_from_ant.html
 //
