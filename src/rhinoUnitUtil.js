@@ -96,7 +96,7 @@ function AssertionException(message, stackTrace) {
 }
 
 AssertionException.print = function (object) {
-	if (typeof object === "object") {
+	if (typeof object === "object" && object !== null) {
 		return getConstructorNameFor(object) + ":" + object;
 	}
 	return typeof object + ":" + object;
@@ -150,65 +150,57 @@ AssertionException.cloneArray = function (array) {
 };
 
 
+AssertionException.testOrNot = function (test, not, failString, notFailString) {
+	if (not && test) {
+		return notFailString;
+	} else if (!not && !test) {
+		return failString;
+	}
+};
+
+AssertionException.equalTestFailureString = function (expected, actual) {
+	if (typeof expected === "string" && typeof actual === "string") {
+		return AssertionException.stringDif(expected, actual);
+	}
+	return "expected:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">";
+};
+
+
 function eq(expected) {
 	return function (actual, not) {
-		if (not) {
-			if (actual === expected) {
-				return "was expecting something different from:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">"; 
-			}
-		} else {
-			if (actual !== expected) {
-				if (typeof expected === "string" && typeof actual === "string") {
-					return AssertionException.stringDif(expected, actual);
-				}
-				return "expected:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">"; 
-			}
-		}
+		var notFailString = "was expecting something different from:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">";
+		var failString = AssertionException.equalTestFailureString(expected, actual);
+
+		return AssertionException.testOrNot(actual === expected, not, failString, notFailString);
 	};
 }
 
 function similar(expected) {
 	return function (actual, not) {
-		if (not) {
-			if (actual == expected) {
-				return "was expecting something different from:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">"; 
-			}
-		} else {
-			if (actual != expected) {
-				if (typeof expected === "string" && typeof actual === "string") {
-					return AssertionException.stringDif(expected, actual);
-				}
-				return "expected:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">"; 
-			}
-		}
+		var notFailString = "was expecting something different from:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">"; 
+		var failString = AssertionException.equalTestFailureString(expected, actual);
+		
+		return AssertionException.testOrNot(actual == expected, not, failString, notFailString);
 	};
 }
 
 function matches(regExp) {
 	return function (actual, not) {
-		if (not) {
-			if (regExp.test(actual)) {
-				return "<" + actual + "> should not have matched " + regExp; 
-			}
-		} else {
-			if (!regExp.test(actual)) {
-				return "<" + actual + "> did not match " + regExp; 
-			}
-		}
+		return AssertionException.testOrNot(
+			regExp.test(actual), 
+			not, 
+			"<" + actual + "> should not have matched " + regExp, 
+			"<" + actual + "> did not match " + regExp);
 	};
 }
 
 function isTrue(message) {
 	return function (actual, not) {
-		if (not) {
-			if (actual) {
-				return message || "Should have been falsey:<" + actual + ">";
-			}
-		} else {
-			if (!actual) {
-				return message || "Should have been truey:<" + actual + ">";
-			}
-		}
+		return AssertionException.testOrNot(
+			actual, 
+			not, 
+			message || "Should have been truey:<" + actual + ">", 
+			message || "Should have been falsey:<" + actual + ">");
 	};
 }
 
@@ -227,58 +219,42 @@ function and() {
 
 function hasConstructor(expected) {
 	return function (actual, not) {
-		if (not) {
-			if (getConstructorNameFor(actual) === expected) {
-				return "expected:<" + AssertionException.print(actual) + "> should not have a constructor of:<" + expected + ">, but it did";
-			}
-		} else {
-			if (getConstructorNameFor(actual) !== expected) {
-				return "expected:<" + AssertionException.print(actual) + "> to have a constructor of:<" + expected + "> but it was " + (typeof actual);
-			}
-		}
+		return AssertionException.testOrNot(
+			getConstructorNameFor(actual) === expected, 
+			not, 
+			"expected:<" + AssertionException.print(actual) + "> to have a constructor of:<" + expected + "> but it was " + (typeof actual), 
+			"expected:<" + AssertionException.print(actual) + "> should not have a constructor of:<" + expected + ">, but it did");
 	};
 }
 
 function isA(expected) {
 	return function (actual, not) {
-		if (not) {
-			if (actual instanceof expected) {
-				return "expected:<" + AssertionException.print(actual) + "> should not be a:<" + AssertionException.print(expected) + ">, but it is";
-			}
-		} else {
-			if (!(actual instanceof expected)) {
-				return "expected:<" + AssertionException.print(actual) + "> should be a:<" + AssertionException.print(expected) + ">, but it isn't";
-			}
-		}
+		return AssertionException.testOrNot(
+			actual instanceof expected, 
+			not, 
+			"expected:<" + AssertionException.print(actual) + "> should be a:<" + AssertionException.print(expected) + ">, but it isn't", 
+			"expected:<" + AssertionException.print(actual) + "> should not be a:<" + AssertionException.print(expected) + ">, but it is");
 	};
 }
 
 function isOfType(expected) {
 	return function (actual, not) {
-		if (not) {
-			if (typeof actual === expected) {
-				return "expected:<" + AssertionException.print(actual) + "> to be of any type except:<" + expected + ">, but it was";
-			}
-		} else {
-			if (typeof actual !== expected) {
-				return "expected:<" + AssertionException.print(actual) + "> to be of type:<" + expected + "> but it was " + (typeof actual);
-			}
-		}
+		return AssertionException.testOrNot(
+			typeof actual === expected, 
+			not, 
+			"expected:<" + AssertionException.print(actual) + "> to be of type:<" + expected + "> but it was " + (typeof actual), 
+			"expected:<" + AssertionException.print(actual) + "> to be of any type except:<" + expected + ">, but it was");
 	};
 }
 
 function isCollectionContaining() {
 	var expected = AssertionException.cloneArray(arguments);
 	return function (list, not) {
-		if (not) {
-			if (AssertionException.intersection(expected, list).length === expected.length) {
-				return "should not have found:<" + AssertionException.print(expected) + "> in:<" + list + ">";
-			}
-		} else {
-			if (AssertionException.intersection(expected, list).length !== expected.length) {
-				return "couldn't find:<" + AssertionException.print(expected) + "> in:<" + list + ">";
-			}
-		}
+		return AssertionException.testOrNot(
+			AssertionException.intersection(expected, list).length === expected.length, 
+			not, 
+			"couldn't find:<" + AssertionException.print(expected) + "> in:<" + list + ">", 
+			"should not have found:<" + AssertionException.print(expected) + "> in:<" + list + ">");
 	};
 }
 
@@ -296,30 +272,21 @@ function containsInOrder() {
 
 	var expected = AssertionException.cloneArray(arguments);
 	return function (actual, not) {
-		var containsInOrder = doesContainInOrder(expected, actual);
-		if (not) {
-			if (containsInOrder) {
-				return "Should not have been the same as:<" + AssertionException.print(actual) + ">";
-			}
-		} else {
-			if (!containsInOrder) {
-				return "Should have been the same as:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">";
-			}
-		}
+		return AssertionException.testOrNot(
+			doesContainInOrder(expected, actual), 
+			not, 
+			"Should have been the same as:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">", 
+			"Should not have been the same as:<" + AssertionException.print(actual) + ">");
 	};
 }
 
 function isNull(message) {
 	return function (actual, not) {
-		if (not) {
-			if (actual === null) {
-				return message || "Should NOT have been null:<" + AssertionException.print(actual) + ">";
-			}
-		} else {
-			if (actual !== null) {
-				return message || "Should have been null:<" + AssertionException.print(actual) + ">";
-			}
-		}
+		return AssertionException.testOrNot(
+			actual === null, 
+			not, 
+			message || "Should have been null:<" + AssertionException.print(actual) + ">", 
+			message || "Should NOT have been null:<" + AssertionException.print(actual) + ">");
 	};
 }
 
@@ -329,15 +296,11 @@ function eqFloat(expected, accuracy) {
 		if (!accuracy) {
 			accuracy = 0.01;
 		}
-		if (not) {
-			if (actual < expected * (1 + accuracy) && actual > expected * (1 - accuracy)) {
-				return "get:<" + actual + "> but should not have been:<" + expected + "> +/-" + (accuracy * 100) + "%";
-			}
-		} else {
-			if (actual > expected * (1 + accuracy) || actual < expected * (1 - accuracy)) {
-				return "expected:<" + expected + "> +/-" + (accuracy * 100) + "%, but was:<" + actual + ">";
-			}
-		}
+		return AssertionException.testOrNot(
+			actual < expected * (1 + accuracy) && actual > expected * (1 - accuracy), 
+			not, 
+			"expected:<" + expected + "> +/-" + (accuracy * 100) + "%, but was:<" + actual + ">", 
+			"get:<" + actual + "> but should not have been:<" + expected + "> +/-" + (accuracy * 100) + "%");
 	};
 }
 
