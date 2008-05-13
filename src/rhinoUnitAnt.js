@@ -27,6 +27,17 @@ function loadFile(file) {
     return (new String(FileUtils.readFully(reader))).toString(); 
 }
 
+var ignoredGlobalVars = attributes.get("ignoredglobalvars") ? attributes.get("ignoredglobalvars").split(" ") : [];
+function ignoreGlobalVariableName(name) {
+	var foundVariable = false;
+	forEachElementOf(ignoredGlobalVars, function (ignoredGlobalVar) {
+		if (ignoredGlobalVar == name) {
+			foundVariable = true;
+		}
+	});
+	return foundVariable;
+}
+
 function runTest(file) {
 
 	function failingTestMessage(testName, e) {
@@ -111,7 +122,25 @@ for (var j = 0; j < filesets.size(); j++) {
 		self.log("Testsuite: " + srcFile);
 		jsfile = new File(fileset.getDir(project), srcFile);
 
+		var globalVars = {};
+		var varName;
+		for (varName in this) {
+			globalVars[varName] = true;
+		}
+		
 		runTest(jsfile);
+		
+		for (varName in this) {
+			if (! globalVars[varName]) {
+				if (ignoreGlobalVariableName(varName)) {
+					delete this[varName];
+				} else {
+					self.log("Warning: " + srcFile + ", Reason: Polluted global namespace with '" + varName + "'", 0);
+					testfailed = true;
+				}
+			}
+		}
+
 	});
 }
 

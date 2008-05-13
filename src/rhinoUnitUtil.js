@@ -323,6 +323,11 @@ function Assert() {
 		onThisObject[thisMethod] = assert.functionThatMustBeCalled(thisMethod, originalFunction);
 	};
 	
+	assert.mustCallNTimes = function (onThisObject, numberOfTimes, thisMethod) {
+		var originalFunction = onThisObject[thisMethod];
+		onThisObject[thisMethod] = this.functionThatMustBeCalledNTimes(thisMethod, numberOfTimes, originalFunction);
+	};
+	
 	assert.mustNotCall = function (onThisObject, thisMethod) {
 		onThisObject[thisMethod] = assert.functionThatMustNotBeCalled(thisMethod);
 	};
@@ -339,12 +344,33 @@ function Assert() {
 		var theFunction = function () {
 			hasBeenCalled = true;
 			if (originalFunction) {
-				originalFunction.apply(this, arguments);
+				return originalFunction.apply(this, arguments);
 			}
 		};
 		
 		assertions.push(function () {
-			assert.that(hasBeenCalled, isTrue("\n--> function '" + (thisMethod || "anonymous") + "' was not called. <--\n"));
+			assert.that(
+				hasBeenCalled, 
+				isTrue("\n--> function '" + (thisMethod || "anonymous") + "' was not called. <--\n"));
+		});
+		
+		return theFunction;
+	};
+	
+	assert.functionThatMustBeCalledNTimes = function (thisMethod, numberOfTimes, originalFunction) {
+		
+		var callCount = 0;
+		var theFunction = function () {
+			callCount += 1;
+			if (originalFunction) {
+				return originalFunction.apply(this, arguments);
+			}
+		};
+		
+		assertions.push(function () {
+			assert.that(
+				callCount === numberOfTimes, 
+				isTrue("\n--> function '" + (thisMethod || "anonymous") + "' was called " + callCount + " times, but should have been called " + numberOfTimes + " times. <--\n"));
 		});
 		
 		return theFunction;

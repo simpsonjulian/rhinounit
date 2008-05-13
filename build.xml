@@ -18,6 +18,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 			  src="src/rhinoUnitAnt.js"
 			  language="javascript">
 		<attribute name="options"/>
+		<attribute name="ignoredglobalvars"/>
 		<element name="fileset" type="fileset"/>
 	</scriptdef>
 	
@@ -42,7 +43,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 		        <include name="**/*.js"/>
 		    </fileset>
 		</jslintant>
-		<jslintant options="{eqeqeq : true, white: true, plusplus : false, bitwise : true, passfail: false, browser: true, evil: true, forin: false}">
+		<jslintant options="{eqeqeq : true, white: true, plusplus : false, bitwise : true, passfail: false}">
 			<fileset dir="test"/>
 		</jslintant>
 	</target>
