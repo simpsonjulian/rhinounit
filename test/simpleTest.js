@@ -47,6 +47,11 @@ testCases(test,
 	function checkIsTrue() {
 		assert.that(true, isTrue());
 	},	
+	
+	function checkIsFalse() {
+		assert.that(false, isFalse());
+	},	
+	
 	function defaultPropertyIsNot2() {
 		assert.that(anObject.defaultProperty, not(eq(2)));
 	},
@@ -70,6 +75,10 @@ testCases(test,
 	function checkIsNotTrue() {
 		assert.that(false, not(isTrue()));
 	},
+	
+	function checkIsNotFalse() {
+		assert.that(true, not(isFalse()));
+	},	
 	
 	function checkShouldThrowException() {
 		shouldThrowException(

@@ -204,13 +204,15 @@ function isTrue(message) {
 	};
 }
 
+function isFalse(message) {
+	return function (actual, not) {
+		return isTrue(message)(actual, !not);
+	};
+}
+
 function not(predicate) {
 	return function (actual, not) {
-		if (not) {
-			return predicate(actual);
-		} else {
-			return predicate(actual, true);
-		}
+		return predicate(actual, !not);
 	};
 }
 
