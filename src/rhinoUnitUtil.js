@@ -43,14 +43,6 @@ function forEachElementOfReversed(list, doThis) {
     forEachElementOf(reversedList, doThis);
 }
 
-function testCases(test) {
-	forEachElementOf(arguments, function (testFunction, index) {
-		if (index > 0) {
-			test[getFunctionNameFor(testFunction)] = testFunction;
-		}
-	});
-}
-
 /* Very Rhino specific way of getting the stack trace so we know where the error happened */
 function getStackTraceFromRhinoException(exception) {
 	var outputStream = new java.io.ByteArrayOutputStream();

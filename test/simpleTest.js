@@ -139,6 +139,39 @@ testCases(test,
 	
 	function checkFloatComparisonWithAccuracy() {
 		assert.that(1.9, eqFloat(1.0, 1.0));
-	}
+	},
 	
+	when(function () {
+			anObject.defaultProperty = 2;
+		},
+		
+		function defaultPropertyShouldNowBe2() {
+			assert.that(anObject.defaultProperty, eq(2));
+		},
+		
+		function defaultStringShouldStayTheSame() {
+			assert.that(anObject.defaultString, eq("john and mary"));
+		},
+		
+		when(function () {
+				anObject.defaultString = "this has changed";
+			},
+			
+			function defaultPropertyShouldStillBe2() {
+				assert.that(anObject.defaultProperty, eq(2));
+			},
+			
+			function defaultStringShouldNowBeDifferent() {
+				assert.that(anObject.defaultString, eq("this has changed"));
+			}
+		)
+	),
+	
+	function defaultPropertyShouldStillBe1() {
+				assert.that(anObject.defaultProperty, eq(1));
+			},
+	
+	function tearDown() {
+				anObject = null;
+			}
 );

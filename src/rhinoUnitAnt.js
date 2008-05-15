@@ -27,6 +27,8 @@ function loadFile(file) {
     return (new String(FileUtils.readFully(reader))).toString(); 
 }
 
+eval(loadFile("src/rhinoUnitUtil.js"));
+
 var ignoredGlobalVars = attributes.get("ignoredglobalvars") ? attributes.get("ignoredglobalvars").split(" ") : [];
 function ignoreGlobalVariableName(name) {
 	var foundVariable = false;
@@ -36,6 +38,31 @@ function ignoreGlobalVariableName(name) {
 		}
 	});
 	return foundVariable;
+}
+
+function addTestsToTestObject(tests, TestObject) {
+	var whenCases = 0;
+	forEachElementOf(tests, function (parameter, index) {
+		if (parameter instanceof Function) {
+			TestObject[getFunctionNameFor(parameter)] = parameter;
+		} else {
+			TestObject["when" + whenCases] = parameter;
+		}
+	});
+}
+
+function testCases(tests) {
+	addTestsToTestObject(AssertionException.cloneArray(arguments).shift(), tests);
+}
+
+function when(setUp) {
+	var whenCase = {
+		setUp: setUp
+	};
+	
+	addTestsToTestObject(AssertionException.cloneArray(arguments).shift(), whenCase);
+
+	return whenCase;
 }
 
 function runTest(file) {
@@ -63,28 +90,14 @@ function runTest(file) {
 			self.log("");
 		}
 	}
-
-	var test = {};
 	
-	eval(loadFile(file));
-	
-	var testCount = 0;
-	var failingTests = 0;
-	var erroringTests = 0;
-	
-	for (var testName in test) {
-		var assert = new Assert();
-		
-		if (testName === "setUp" || testName === "tearDown") {
-			continue;
-		}
-		
+	function executeTest(tests, testName, superSetUp, superTearDown) {
 		testCount++;
 		try {
-		    if (test.setUp) {
-				test.setUp();
+			if (superSetUp) {
+				superSetUp();
 			}
-			test[testName]();
+			tests[testName]();
 			assert.test();
 		} catch (e) {
 			if (e.constructor === AssertionException) {
@@ -96,10 +109,58 @@ function runTest(file) {
 			}
 			testfailed = true;
 		}
-		if (test.tearDown) {
-			test.tearDown();
+		if (superTearDown) {
+			superTearDown();
 		}
 	}
+	
+	var before = {}, after = {};
+	function wrapFunction$With$Position$(wrapped, wrapping, position) {
+		if (wrapping) {
+			return function () {
+				if (position === before && wrapped) {
+					wrapped();
+				}
+				wrapping();
+				if (position === after && wrapped) {
+					wrapped();
+				}
+			};
+		}
+		return wrapped;
+	}
+
+	function executeTestCases(tests, superSetUp, superTearDown) {
+		
+		for (var testName in tests) {
+			assert = new Assert();
+			
+			if (testName === "setUp" || testName === "tearDown") {
+				continue;
+			}
+			
+			var theTest = tests[testName];
+			
+			if (theTest instanceof Function) {
+				executeTest(tests, testName, superSetUp, superTearDown);
+			} else {
+				var newSuperSetup = wrapFunction$With$Position$(superSetUp, theTest.setUp, before);
+				var newSuperTearDown = wrapFunction$With$Position$(superTearDown, theTest.tearDown, after);
+				executeTestCases(theTest, newSuperSetup, newSuperTearDown);
+			}
+		}
+	}
+
+	var assert;
+	var test = {};
+	
+	eval(loadFile(file));
+	
+	var testCount = 0;
+	var failingTests = 0;
+	var erroringTests = 0;
+	
+	executeTestCases(test, test.setUp, test.tearDown);
 
     self.log("Tests run: " + testCount + ", Failures: " + failingTests + ", Errors: " + erroringTests);
 	self.log("");
@@ -107,7 +168,6 @@ function runTest(file) {
 }
 				
 eval("options = " + attributes.get("options") + ";");
-eval(loadFile("src/rhinoUnitUtil.js"));
 
 var filesets = elements.get("fileset");
 for (var j = 0; j < filesets.size(); j++) {
