@@ -165,6 +165,15 @@ AssertionException.equalTestFailureString = function (expected, actual) {
 	return "expected:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(actual) + ">";
 };
 
+AssertionException.returnArrayOrArgumentsAsArray = function (theArguments) {
+	var expected = theArguments[0];
+	if (theArguments.length === 1 && expected instanceof Array) {
+		return expected;
+	}
+	return AssertionException.cloneArray(theArguments);
+
+};
+
 
 function eq(expected) {
 	return function (actual, not) {
@@ -250,13 +259,25 @@ function isOfType(expected) {
 }
 
 function isCollectionContaining() {
-	var expected = AssertionException.cloneArray(arguments);
+	var expected = AssertionException.returnArrayOrArgumentsAsArray(arguments);
+
 	return function (list, not) {
 		return AssertionException.testOrNot(
 			AssertionException.intersection(expected, list).length === expected.length, 
 			not, 
-			"couldn't find:<" + AssertionException.print(expected) + "> in:<" + list + ">", 
-			"should not have found:<" + AssertionException.print(expected) + "> in:<" + list + ">");
+			"couldn't find:<" + AssertionException.print(expected) + "> in:<" + AssertionException.print(list) + ">", 
+			"should not have found:<" + AssertionException.print(expected) + "> in:<" + AssertionException.print(list) + ">");
+	};
+}
+
+function isCollectionContainingOnly() {
+	var expected = AssertionException.returnArrayOrArgumentsAsArray(arguments);
+	return function (list, not) {
+		return AssertionException.testOrNot(
+			expected.length === list.length && AssertionException.intersection(expected, list).length === expected.length, 
+			not, 
+			"Should have been the same as:<" + AssertionException.print(expected) + "> but was:<" + AssertionException.print(list) + ">", 
+			"Should not have been the same as:<" + AssertionException.print(list) + ">");
 	};
 }
 
@@ -272,7 +293,7 @@ function containsInOrder() {
 		return matches;
 	}
 
-	var expected = AssertionException.cloneArray(arguments);
+	var expected = AssertionException.returnArrayOrArgumentsAsArray(arguments);
 	return function (actual, not) {
 		return AssertionException.testOrNot(
 			doesContainInOrder(expected, actual), 

@@ -138,6 +138,19 @@ testCases(test,
 		});
 	},
 	
+	function checkCollectionContainingOnly() {
+		shouldThrowAssertException(function () {
+			assert.that([1, 3, 2], not(isCollectionContainingOnly([1, 2, 3])));
+		});
+	},
+	
+	function checkNotCollectionContainingOnly() {
+		shouldThrowAssertException(function () {
+			assert.that([4, 1, 3, 2], isCollectionContainingOnly([1, 2, 3]));
+			assert.that([3, 2], isCollectionContainingOnly([1, 2, 3]));
+		});
+	},
+	
 	function checkFloatComparison() {
 		shouldThrowAssertException(function () {
 			assert.that(1.011, eqFloat(1.0));

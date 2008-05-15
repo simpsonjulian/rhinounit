@@ -100,6 +100,10 @@ testCases(test,
 		assert.that([1, 2, 3], isCollectionContaining(2, 3));
 	},
 	
+	function checkCollectionContainingArray() {
+		assert.that([1, 2, 3], isCollectionContaining([2, 3]));
+	},
+	
 	function checkCollectionNotContaining() {
 		assert.that([1, 3], not(isCollectionContaining(2, 4)));
 	},
@@ -108,8 +112,21 @@ testCases(test,
 		assert.that([1, 3, 2], containsInOrder(1, 3, 2));
 	},
 	
+	function checkCollectionContainingInOrder() {
+		assert.that([1, 3, 2], containsInOrder([1, 3, 2]));
+	},
+	
 	function checkCollectionDoesntContainInOrder() {
 		assert.that([1, 3, 2], not(containsInOrder(1, 2, 3)));
+	},
+	
+	function checkCollectionContainingOnly() {
+		assert.that([1, 3, 2], isCollectionContainingOnly([1, 2, 3]));
+	},
+	
+	function checkNotCollectionContainingOnly() {
+		assert.that([4, 1, 3, 2], not(isCollectionContainingOnly([1, 2, 3])));
+		assert.that([3, 2], not(isCollectionContainingOnly([1, 2, 3])));
 	},
 	
 	function checkFloatComparison() {
