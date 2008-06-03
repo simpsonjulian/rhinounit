@@ -1,4 +1,4 @@
-<!--
+/*
 Copyright (c) 2008, Tiest Vilee
 All rights reserved.
 
@@ -9,44 +9,37 @@ Redistribution and use in source and binary forms, with or without modification,
     * The names of its contributors may not be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--->
-<project name="" basedir="." default="run-all-tests">
+*/
 
-	<target name="run-all-tests" depends="run-unit-tests, run-js-lint"/>
+var rhinounit = {};
 
-	<scriptdef name="rhinounit"
-			  src="src/rhinoUnitAnt.js"
-			  language="javascript">
-		<attribute name="options"/>
-		<attribute name="ignoredglobalvars"/>
-		<element name="fileset" type="fileset"/>
-	</scriptdef>
+rhinounit.smallController = function (view, service) {
+	var instance = this;
 	
-	<target name="run-unit-tests">
-		<rhinounit options="{verbose:true, stackTrace:true}">
-			<fileset dir="test">
-				<include name="**/*.js"/>
-				<exclude name="standard.js"/>
-			</fileset>
-		</rhinounit>
-	</target>
-	
-	<scriptdef name="jslintant"
-			src="jslint/jslintant.js"
-			language="javascript">
-		<attribute name="options" />
-		<element name="fileset" type="fileset" />
-	</scriptdef>
+	this.green = {};
+	this.blue = {};
+	this.red = {};
 
-	<target name="run-js-lint">
-		<jslintant options="{eqeqeq : false, white: true, plusplus : false, bitwise : true, passfail: false, browser: true, evil: true, forin: true, newprimitive: true}">
-		    <fileset dir="src">
-		        <include name="**/*.js"/>
-		    </fileset>
-		</jslintant>
-		<jslintant options="{eqeqeq : true, white: true, plusplus : false, bitwise : true, evil: true, passfail: false}">
-			<fileset dir="test"/>
-		</jslintant>
-	</target>
+	function incrementCounter() {
+		service.incrementCounterBy(1);
+	}
+
+	this.getCount = function () {
+		return service.getCount();
+	};
 	
-</project>
+	this.colouring = function (rotation) {
+		if (typeof rotation === 'undefined') {
+			rotation = 0;
+		}
+		var mod3 = (service.getCount() + rotation) % 3;
+		if (mod3 === 0) {
+			return instance.red;
+		} else if (mod3 === 1) {
+			return instance.green;
+		}
+		return instance.blue;
+	};
+
+	view.addClickListener(incrementCounter);
+};

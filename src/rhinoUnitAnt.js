@@ -42,17 +42,20 @@ function ignoreGlobalVariableName(name) {
 
 function addTestsToTestObject(tests, TestObject) {
 	var whenCases = 0;
-	forEachElementOf(tests, function (parameter, index) {
+	forEachElementOf(tests, function (parameter) {
 		if (parameter instanceof Function) {
 			TestObject[getFunctionNameFor(parameter)] = parameter;
 		} else {
 			TestObject["when" + whenCases] = parameter;
+			whenCases += 1;
 		}
 	});
 }
 
-function testCases(tests) {
-	addTestsToTestObject(AssertionException.cloneArray(arguments).shift(), tests);
+function testCases(testObject) {
+	var args = AssertionException.cloneArray(arguments);
+	args.shift(); // remove first element
+	addTestsToTestObject(args, testObject);
 }
 
 function when(setUp) {
@@ -60,7 +63,9 @@ function when(setUp) {
 		setUp: setUp
 	};
 	
-	addTestsToTestObject(AssertionException.cloneArray(arguments).shift(), whenCase);
+	var args = AssertionException.cloneArray(arguments);
+	args.shift(); // remove first element
+	addTestsToTestObject(args, whenCase);
 
 	return whenCase;
 }
@@ -161,6 +166,12 @@ function runTest(file) {
 	var erroringTests = 0;
 	
 	executeTestCases(test, test.setUp, test.tearDown);
+	
+	if (testCount === 0) {
+		erroringTests += 1;
+		testfailed = true;
+		failingTestMessage(file, "No tests defined");
+	}
 
     self.log("Tests run: " + testCount + ", Failures: " + failingTests + ", Errors: " + erroringTests);
 	self.log("");
