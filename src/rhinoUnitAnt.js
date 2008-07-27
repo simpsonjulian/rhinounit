@@ -40,6 +40,11 @@ function ignoreGlobalVariableName(name) {
 	return foundVariable;
 }
 
+var haltOnFirstUnitFailure = false;
+if (attributes.get("haltonfirstfailure")) {
+	haltOnFirstUnitFailure = attributes.get("haltonfirstfailure") == "true";
+}
+
 function addTestsToTestObject(tests, TestObject) {
 	var whenCases = 0;
 	forEachElementOf(tests, function (parameter) {
@@ -212,6 +217,9 @@ for (var j = 0; j < filesets.size(); j++) {
 			}
 		}
 
+		if (testfailed && haltOnFirstUnitFailure) {
+			self.fail("RhinoUnit failed.");
+		}
 	});
 }
 

@@ -30,6 +30,9 @@ testCases(test,
 				return 1;
 			}
 		};
+		service.getCount = function () {
+			return aValue;
+		};
 		controller = new rhinounit.smallController(view, service);
 	},
 	
@@ -38,8 +41,7 @@ testCases(test,
 		controller = new rhinounit.smallController(view, service);
 	},
 	
-	when(
-		function addClickListenerShouldImediatelyCallCallback() {
+	when(function addClickListenerShouldImediatelyCallCallback() {
 			view.addClickListener = function (aFunction) {
 				aFunction();
 			};		
@@ -51,40 +53,31 @@ testCases(test,
 			assert.mustCall(service, 'incrementCounterBy');
 			
 			controller = new rhinounit.smallController(view, service);
-		}
-	),
-		
-	when(
-		function serviceGetCountReturnsAValue() {
-			service.getCount = function () {
-				return aValue;
-			};
-		},
+		}),
 	
-		function shouldRetrieveCountFromService() {
-			aValue = 456;
-			assert.that(controller.getCount(), eq(aValue));
-		},
-	
-			function shouldReturnRedForCountDivisibleBy3() {
-				aValue = 9;
-				assert.that(controller.colouring(), eq(controller.red));
-			},
-	
-			function shouldReturnGreenForCountDivisibleBy3Plus1() {
-				aValue = 10;
-				assert.that(controller.colouring(), eq(controller.green));
-			},
-	
-			function shouldReturnBlueForCountDivisibleBy3Plus2() {
-				aValue = 11;
-				assert.that(controller.colouring(), eq(controller.blue));
-			},
-	
-			function shouldReturnGreenForCountDivisibleBy3RotatedBy1() {
-				aValue = 9;
-				assert.that(controller.colouring(1), eq(controller.green));
-			}
-	)
+	function shouldRetrieveCountFromService() {
+            aValue = 456;
+            assert.that(controller.getCount(), eq(aValue));
+        },
+
+	function shouldReturnRedForCountDivisibleBy3() {
+            aValue = 9;
+            assert.that(controller.colouring(), eq(controller.red));
+        },
+
+	function shouldReturnGreenForCountDivisibleBy3Plus1() {
+            aValue = 10;
+            assert.that(controller.colouring(), eq(controller.green));
+        },
+
+	function shouldReturnBlueForCountDivisibleBy3Plus2() {
+            aValue = 11;
+            assert.that(controller.colouring(), eq(controller.blue));
+        },
+
+	function shouldReturnGreenForCountDivisibleBy3RotatedBy1() {
+            aValue = 9;
+            assert.that(controller.colouring(1), eq(controller.green));
+        }
 
 );

@@ -20,14 +20,53 @@ function getConstructorNameFor(theObject) {
 	return getFunctionNameFor(theObject.constructor);
 }
 
-function inspectObject(theObject) {
-	if (theObject.getClass) {
-		project.log(theObject.getClass() + ":");
-	} else {
-		project.log(getConstructorNameFor(theObject) + ":");
+function inspectObject(theObject, depth, indent) {
+	if (!indent) {
+		indent = "";
 	}
+	if (!depth) {
+		depth = 1;
+	}
+	
+	if (theObject === null) {
+		project.log(indent + "null");
+		return;
+	}
+	if (typeof theObject === "undefined") {
+		project.log(indent + "undefined");
+		return;
+	}
+	
+	if (theObject.getClass) {
+		project.log(indent + theObject.getClass() + " =>");
+	} else {
+		project.log(indent + getConstructorNameFor(theObject) + " =>");
+	}
+	
+	indent += "  ";
+	depth -= 1;
+	
 	for (var w in theObject) {
-		project.log("-- " + w);
+		var typeOfW = typeof theObject[w];
+		var output = indent + w + " : ";
+		if (typeOfW === "string") {
+			output += "[";
+			if (theObject[w].length > (80 - output.length - 1)) {
+				output += theObject[w].substring(80 - output.length - 1 - 3) + "...]";
+			} else {
+				output += theObject[w] + "]";
+			}
+		} else if (typeOfW === "number") {
+			output += "[" + theObject[w] + "]";
+		} else {
+			output += typeOfW;
+		}
+
+		project.log(output);
+		
+		if (typeOfW === "object" && depth) {
+			inspectObject(theObject[w], depth, indent + "  ");
+		}
 	}
 }
 
@@ -41,42 +80,6 @@ function forEachElementOf(list, doThis) {
 function forEachElementOfReversed(list, doThis) {
 	var reversedList = [].concat(list).reverse();
     forEachElementOf(reversedList, doThis);
-}
-
-/* Very Rhino specific way of getting the stack trace so we know where the error happened */
-function getStackTraceFromRhinoException(exception) {
-	var outputStream = new java.io.ByteArrayOutputStream();
-	var printStream = new java.io.PrintStream(outputStream);
-	exception.printStackTrace(printStream);
-	return outputStream.toString();
-}
-
-
-function extractScriptStackTraceFromFullStackTrace(trace, ignoreAfterMatching) {
-	var result = [];
-	var lines = trace.split("[\n\r\f]");
-	for (var i = 0; i < lines.length; i++) {
-		if (/at script/.test(lines[i]) && ! /callStack/.test(lines[i])) {
-			result.push(lines[i]);
-			if (ignoreAfterMatching && ignoreAfterMatching.test(lines[i])) {
-				break;
-			}
-		}
-	}
-	return result.join("\n");
-}
-
-/**
- * Simulates a 'real' Exception by calling a non-existant menthod.  This real EcmaException
- * is then used to extract the script call stack.
- **/
-function callStack() {
-	try {
-		this.doesntexist();
-	} catch (e) {
-		var stackTrace = getStackTraceFromRhinoException(e.rhinoException);
-		return extractScriptStackTraceFromFullStackTrace(stackTrace, /runTest/);
-	}
 }
 
 function AssertionException(message, stackTrace) {
@@ -324,36 +327,36 @@ function Assert() {
 
 	var assert = this;
 
-	assert.that = function (actual, predicate) {
+	assert.that = function that(actual, predicate) {
 		var result = predicate(actual);
 		if (result) {
-			throw new AssertionException(result, callStack());
+			throw new AssertionException(result, assert.callStack(/script.executeTest/));
 		}
 	};
 	
 	var assertions = [];
 	
-	assert.mustCall = function (onThisObject, thisMethod) {
+	assert.mustCall = function mustCall(onThisObject, thisMethod) {
 		var originalFunction = onThisObject[thisMethod];
 		onThisObject[thisMethod] = assert.functionThatMustBeCalled(thisMethod, originalFunction);
 	};
 	
-	assert.mustCallNTimes = function (onThisObject, numberOfTimes, thisMethod) {
+	assert.mustCallNTimes = function mustCallNTimes(onThisObject, numberOfTimes, thisMethod) {
 		var originalFunction = onThisObject[thisMethod];
 		onThisObject[thisMethod] = this.functionThatMustBeCalledNTimes(thisMethod, numberOfTimes, originalFunction);
 	};
 	
-	assert.mustNotCall = function (onThisObject, thisMethod) {
+	assert.mustNotCall = function mustNotCall(onThisObject, thisMethod) {
 		onThisObject[thisMethod] = assert.functionThatMustNotBeCalled(thisMethod);
 	};
 	
-	assert.functionThatMustNotBeCalled = function (thisMethod) {
+	assert.functionThatMustNotBeCalled = function functionThatMustNotBeCalled(thisMethod) {
 		return function () {
 			assert.fail("\n--> function '" + (thisMethod || "anonymous") + "' should not have been called. <--\n");
 		};
 	};
 	
-	assert.functionThatMustBeCalled = function (thisMethod, originalFunction) {
+	assert.functionThatMustBeCalled = function functionThatMustBeCalled(thisMethod, originalFunction) {
 		
 		var hasBeenCalled = false;
 		var theFunction = function () {
@@ -372,7 +375,7 @@ function Assert() {
 		return theFunction;
 	};
 	
-	assert.functionThatMustBeCalledNTimes = function (thisMethod, numberOfTimes, originalFunction) {
+	assert.functionThatMustBeCalledNTimes = function functionThatMustBeCalledNTimes(thisMethod, numberOfTimes, originalFunction) {
 		
 		var callCount = 0;
 		var theFunction = function () {
@@ -391,15 +394,55 @@ function Assert() {
 		return theFunction;
 	};
 	
-	assert.test = function () {
+	assert.test = function test() {
 		forEachElementOf(assertions, function (assertion) {
 			assertion();
 		});
 	};
 	
-	assert.fail = function (message) {
+	assert.fail = function fail(message) {
 		assert.that(false, isTrue(message || "failed"));
 	};
+	
+	/**
+	* Simulates a 'real' Exception by calling a non-existant menthod.  This real EcmaException
+	 * is then used to extract the script call stack.
+	 **/
+	assert.callStack = function callStack(optionalIgnoreAfterMatching) {
+		if (!optionalIgnoreAfterMatching) {
+			optionalIgnoreAfterMatching = /runTest/;
+		}
+		
+		/* Very Rhino specific way of getting the stack trace so we know where the error happened */
+		function getStackTraceFromRhinoException(exception) {
+			var outputStream = new java.io.ByteArrayOutputStream();
+			var printStream = new java.io.PrintStream(outputStream);
+			exception.printStackTrace(printStream);
+			return outputStream.toString();
+		}
+
+		function extractScriptStackTraceFromFullStackTrace(trace, ignoreAfterMatching) {
+			var result = [];
+			var lines = trace.split("[\n\r\f]");
+			for (var i = 0; i < lines.length; i++) {
+				if (/at script/.test(lines[i]) && ! /callStack/.test(lines[i])) {
+					result.push(lines[i]);
+					if (ignoreAfterMatching && ignoreAfterMatching.test(lines[i])) {
+						break;
+					}
+				}
+			}
+			return result.join("\n");
+		}
+
+		try {
+			this.doesntexist();
+		} catch (e) {
+			var stackTrace = getStackTraceFromRhinoException(e.rhinoException);
+			return extractScriptStackTraceFromFullStackTrace(stackTrace, optionalIgnoreAfterMatching);
+		}
+	};
+
 }
 
 function fail(message) {

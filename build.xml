@@ -19,15 +19,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 			  language="javascript">
 		<attribute name="options"/>
 		<attribute name="ignoredglobalvars"/>
+		<attribute name="haltOnFirstFailure"/>
 		<element name="fileset" type="fileset"/>
 	</scriptdef>
 	
 	<target name="run-unit-tests">
-		<rhinounit options="{verbose:true, stackTrace:true}">
+		<rhinounit options="{verbose:true, stackTrace:true}" haltOnFirstFailure="true">
 			<fileset dir="test">
-				<include name="**/*.js"/>
+				<include name="*.js"/>
 				<exclude name="standard.js"/>
 			</fileset>
+		</rhinounit>
+		<rhinounit options="{verbose:true, stackTrace:true}" ignoredglobalvars="rhinounit">
+			<fileset dir="example/test">
+			<include name="*.js"/>
+		</fileset>
 		</rhinounit>
 	</target>
 	
@@ -46,6 +52,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 		</jslintant>
 		<jslintant options="{eqeqeq : true, white: true, plusplus : false, bitwise : true, evil: true, passfail: false}">
 			<fileset dir="test"/>
+		</jslintant>
+		<jslintant options="{eqeqeq : true, white: true, plusplus : false, bitwise : true, evil: true, passfail: false}">
+			<fileset dir="example">
+				<include name="test/*.js"/>
+				<include name="src/*.js"/>
+		    </fileset>
 		</jslintant>
 	</target>
 	
