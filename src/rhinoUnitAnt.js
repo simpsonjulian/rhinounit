@@ -16,10 +16,6 @@ importClass(Packages.org.apache.tools.ant.util.FileUtils);
 importClass(java.io.FileReader);
 
 var options;
-var fileset;
-var ds;
-var srcFiles;
-var jsfile;
 var testfailed = false;
 
 function loadFile(file) {
@@ -27,7 +23,11 @@ function loadFile(file) {
     return (new String(FileUtils.readFully(reader))).toString(); 
 }
 
-eval(loadFile("src/rhinoUnitUtil.js"));
+var rhinoUnitUtilPath = "src/rhinoUnitUtil.js";
+if (attributes.get("rhinounitutilpath")) {
+	rhinoUnitUtilPath = attributes.get("rhinounitutilpath");
+}
+eval(loadFile(rhinoUnitUtilPath));
 
 var ignoredGlobalVars = attributes.get("ignoredglobalvars") ? attributes.get("ignoredglobalvars").split(" ") : [];
 function ignoreGlobalVariableName(name) {
@@ -188,15 +188,13 @@ eval("options = " + attributes.get("options") + ";");
 var filesets = elements.get("fileset");
 for (var j = 0; j < filesets.size(); j++) {
 
-	fileset = filesets.get(j);
-
-	fileset = elements.get("fileset").get(0);
-	ds = fileset.getDirectoryScanner(project);
-	srcFiles = ds.getIncludedFiles();
+	var fileset = elements.get("fileset").get(0);
+	var ds = fileset.getDirectoryScanner(project);
+	var srcFiles = ds.getIncludedFiles();
 
 	forEachElementOf(srcFiles, function (srcFile) {
 		self.log("Testsuite: " + srcFile);
-		jsfile = new File(fileset.getDir(project), srcFile);
+		var jsfile = new File(fileset.getDir(project), srcFile);
 
 		var globalVars = {};
 		var varName;

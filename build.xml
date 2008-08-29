@@ -20,17 +20,18 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 		<attribute name="options"/>
 		<attribute name="ignoredglobalvars"/>
 		<attribute name="haltOnFirstFailure"/>
+		<attribute name="rhinoUnitUtilPath"/>
 		<element name="fileset" type="fileset"/>
 	</scriptdef>
 	
 	<target name="run-unit-tests">
-		<rhinounit options="{verbose:true, stackTrace:true}" haltOnFirstFailure="true">
+		<rhinounit options="{verbose:true, stackTrace:true}" haltOnFirstFailure="true" rhinoUnitUtilPath="src/rhinoUnitUtil.js">
 			<fileset dir="test">
 				<include name="*.js"/>
 				<exclude name="standard.js"/>
 			</fileset>
 		</rhinounit>
-		<rhinounit options="{verbose:true, stackTrace:true}" ignoredglobalvars="rhinounit">
+		<rhinounit options="{verbose:true, stackTrace:true}" ignoredglobalvars="rhinounit" rhinoUnitUtilPath="src/rhinoUnitUtil.js">
 			<fileset dir="example/test">
 			<include name="*.js"/>
 		</fileset>
