@@ -17,8 +17,19 @@ var jsfile;
 var fulljslint;
 var lintfailed = false;
 // read fulljslint and eval it into this script.
-var readerLint = new FileReader("jslint/fulljslint.js");
-var fulljslint = new String(FileUtils.readFully(readerLint)); 
+var jsLintPath = "jslint/fulljslint.js";
+if (attributes.get("jslintpath")) {
+	jsLintPath = attributes.get("jslintpath");
+}
+
+var jsLintFile = new File(jsLintPath);
+if (jsLintFile.isAbsolute() === false)
+{
+	jsLintFile = new File(project.getProperty("basedir"), jsLintPath);
+}
+
+var readerLint = new FileReader(jsLintFile);
+var fulljslint = new String(FileUtils.readFully(readerLint));
 eval(fulljslint.toString());
 
 // continue
@@ -37,7 +48,7 @@ for (var j = 0; j < filesets.size(); j++) {
         jsfile = new File(fileset.getDir(project), srcFiles[i]);
 
         checkFile(jsfile);
-    }    
+    }
 }
 
 if (lintfailed) {
@@ -45,14 +56,14 @@ if (lintfailed) {
 }
 
 function checkFile(file){
-    // read the file into a string and make it a real 
+    // read the file into a string and make it a real
     // JavaScript string!
     var reader = new FileReader(file);
     // readFully returns java.lang.String
     // new String makes it a java String object
-    var input = new String(FileUtils.readFully(reader)); 
+    var input = new String(FileUtils.readFully(reader));
     // this makes the type string, which is important
-    // because JSLINT assumes that input is an array 
+    // because JSLINT assumes that input is an array
     // if it is not typeof string.
     input = input.toString().replace(/\t/g,"    ");
     if (!input) {
@@ -61,7 +72,7 @@ function checkFile(file){
     }
     if (!JSLINT(input, options)) {
         self.log("jslint: " + JSLINT.errors.length + " Problems found in " + file.toString());
-	
+
         for (var i = 0; i < JSLINT.errors.length; i += 1) {
             var e = JSLINT.errors[i];
             if (e) {
@@ -73,7 +84,7 @@ function checkFile(file){
             }
         }
                 self.log("<exclude name=\"" + file.toString() + "\"/>");
-        
+
 		lintfailed = true;
     } else {
         self.log("jslint: No problems found in " + file.toString());

@@ -18,9 +18,14 @@ importClass(java.io.FileReader);
 var options;
 var testfailed = false;
 
-function loadFile(file) {
-    var reader = new FileReader(file);
-    return (new String(FileUtils.readFully(reader))).toString(); 
+function loadFile(fileName) {
+	var file = new File(fileName);
+	if (file.isAbsolute() === false)
+	{
+		file = new File(project.getProperty("basedir"), fileName);
+	}
+	var reader = new FileReader(file);
+	return (new String(FileUtils.readFully(reader))).toString();
 }
 
 var rhinoUnitUtilPath = "src/rhinoUnitUtil.js";
@@ -67,7 +72,7 @@ function when(setUp) {
 	var whenCase = {
 		setUp: setUp
 	};
-	
+
 	var args = AssertionException.cloneArray(arguments);
 	args.shift(); // remove first element
 	addTestsToTestObject(args, whenCase);
@@ -86,11 +91,11 @@ function runTest(file) {
 			self.log("");
 		}
 	}
-	
+
 	function erroringTestMessage(testName, e) {
 		if (options.verbose) {
 			self.log("Error: " + testName + ", Reason: " + e, 0);
-			
+
 			if (e.rhinoException) {
 				var stackTrace = getStackTraceFromRhinoException(e.rhinoException);
 				var traceString = extractScriptStackTraceFromFullStackTrace(stackTrace, /runTest/);
@@ -100,7 +105,7 @@ function runTest(file) {
 			self.log("");
 		}
 	}
-	
+
 	function executeTest(tests, testName, superSetUp, superTearDown) {
 		testCount++;
 		try {
@@ -123,7 +128,7 @@ function runTest(file) {
 			superTearDown();
 		}
 	}
-	
+
 	var before = {}, after = {};
 	function wrapFunction$With$Position$(wrapped, wrapping, position) {
 		if (wrapping) {
@@ -141,16 +146,16 @@ function runTest(file) {
 	}
 
 	function executeTestCases(tests, superSetUp, superTearDown) {
-		
+
 		for (var testName in tests) {
 			assert = new Assert();
-			
+
 			if (testName === "setUp" || testName === "tearDown") {
 				continue;
 			}
-			
+
 			var theTest = tests[testName];
-			
+
 			if (theTest instanceof Function) {
 				executeTest(tests, testName, superSetUp, superTearDown);
 			} else {
@@ -163,15 +168,15 @@ function runTest(file) {
 
 	var assert;
 	var test = {};
-	
+
 	eval(loadFile(file));
-	
+
 	var testCount = 0;
 	var failingTests = 0;
 	var erroringTests = 0;
-	
+
 	executeTestCases(test, test.setUp, test.tearDown);
-	
+
 	if (testCount === 0) {
 		erroringTests += 1;
 		testfailed = true;
@@ -180,9 +185,9 @@ function runTest(file) {
 
     self.log("Tests run: " + testCount + ", Failures: " + failingTests + ", Errors: " + erroringTests);
 	self.log("");
-	
+
 }
-				
+
 eval("options = " + attributes.get("options") + ";");
 
 var filesets = elements.get("fileset");
@@ -201,9 +206,9 @@ for (var j = 0; j < filesets.size(); j++) {
 		for (varName in this) {
 			globalVars[varName] = true;
 		}
-		
+
 		runTest(jsfile);
-		
+
 		for (varName in this) {
 			if (! globalVars[varName]) {
 				if (ignoreGlobalVariableName(varName)) {
@@ -224,4 +229,3 @@ for (var j = 0; j < filesets.size(); j++) {
 if (testfailed) {
 	self.fail("RhinoUnit failed.");
 }
-
